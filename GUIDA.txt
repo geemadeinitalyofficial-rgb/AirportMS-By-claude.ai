@@ -1,0 +1,361 @@
+AIRPORTMS — GUIDA COMPLETA
+Airport Management System v1.0
+===========================================================
+
+INDICE
+------
+1.  Struttura del Progetto
+2.  Requisiti di Sistema
+3.  Installazione delle Dipendenze
+4.  Avvio in Modalità Sviluppo
+5.  Guida ai Moduli
+6.  Compilazione con py2exe — Guida Passo-Passo
+7.  Distribuzione del Programma
+8.  Risoluzione Problemi
+9.  Note sul Database
+
+===========================================================
+1. STRUTTURA DEL PROGETTO
+===========================================================
+
+AirportMS/
+│
+├── main.py                    ← Entry point principale
+├── requirements.txt           ← Dipendenze Python
+├── setup.py                   ← Script py2exe per compilazione
+│
+├── core/
+│   ├── database.py            ← Gestione SQLite (tutte le tabelle)
+│   └── app_state.py           ← Stato globale dell'applicazione
+│
+├── db/
+│   └── airport.db             ← Database SQLite (generato al primo avvio)
+│
+└── ui/
+    ├── main_window.py         ← Finestra principale + sidebar navigazione
+    └── panels/
+        ├── dashboard_panel.py     ← Pannello overview con statistiche
+        ├── flights_panel.py       ← Gestione voli (CRUD + stato + gate)
+        ├── passengers_panel.py    ← Gestione passeggeri e prenotazioni
+        ├── gates_panel.py         ← Gestione gate (mappa + lista)
+        ├── security_panel.py      ← Controlli di sicurezza ed eventi
+        ├── kiosk_panel.py         ← FIDS display partenze/arrivi
+        ├── boarding_panel.py      ← Verifica biglietti + TTS annunci
+        ├── staff_panel.py         ← Gestione personale
+        ├── timeclock_panel.py     ← Timbro cartellino IN/OUT
+        └── reports_panel.py       ← Report, statistiche, log, esporta CSV
+
+===========================================================
+2. REQUISITI DI SISTEMA
+===========================================================
+
+- Windows 10 / 11  (64-bit raccomandato)
+- Python 3.8 – 3.11  (py2exe NON supporta ancora Python 3.12+)
+  → Download: https://www.python.org/downloads/release/python-3119/
+  → Scegli "Windows installer (64-bit)"
+- RAM: minimo 4 GB (8 GB raccomandato)
+- Display: 1920×1080 minimo (ottimizzato per 16" 1920×1080 o superiore)
+
+IMPORTANTE per py2exe:
+- Usa Python 3.8–3.11 SOLO (py2exe non supporta 3.12+)
+- Se hai già Python 3.12+, installa Python 3.11 come versione separata
+- py2exe supporta solo Windows (per macOS/Linux usa PyInstaller)
+
+===========================================================
+3. INSTALLAZIONE DELLE DIPENDENZE
+===========================================================
+
+Passo 1 — Apri il Prompt dei Comandi come Amministratore:
+  Start → cerca "cmd" → tasto destro → "Esegui come amministratore"
+
+Passo 2 — Naviga nella cartella del progetto:
+  cd C:\percorso\alla\cartella\AirportMS
+
+Passo 3 — (Opzionale ma consigliato) Crea un ambiente virtuale:
+  python -m venv venv
+  venv\Scripts\activate
+
+Passo 4 — Installa le dipendenze:
+  pip install PyQt5 pyttsx3
+
+Passo 5 — Installa py2exe per la compilazione:
+  pip install py2exe
+
+Verifica installazione:
+  python -c "import PyQt5; print('PyQt5 OK')"
+  python -c "import pyttsx3; print('pyttsx3 OK')"
+  python -c "import py2exe; print('py2exe OK')"
+
+===========================================================
+4. AVVIO IN MODALITÀ SVILUPPO
+===========================================================
+
+Dalla cartella del progetto:
+  python main.py
+
+Il programma si avvia in modalità full-screen.
+Per uscire dal full-screen: premi ESC (passa a finestra normale)
+Per tornare al full-screen: premi ESC di nuovo
+Per chiudere: clicca "⏻ Esci" nella sidebar
+
+Al primo avvio viene creato automaticamente il database SQLite
+in db/airport.db con dati demo precaricati (8 voli, 5 staff, 3 passeggeri).
+
+===========================================================
+5. GUIDA AI MODULI
+===========================================================
+
+[🏠 DASHBOARD]
+Panoramica in tempo reale dell'aeroporto.
+Mostra: voli totali, passeggeri, gate liberi, imbarcati,
+ritardati, cancellati, personale attivo, incidenti sicurezza.
+Si aggiorna automaticamente ogni 15 secondi.
+
+[✈ GESTIONE VOLI]
+- Visualizza tutti i voli in una tabella filtrable
+- Crea nuovi voli con il pulsante "➕ Nuovo Volo"
+- Modifica selezionando un volo nella tabella
+- Cambio rapido stato: Boarding, Delayed, Cancelled, Departed, Landed
+- "🔄 Assegna Gate Casuale" → assegna automaticamente gate liberi a tutti
+  i voli che non ce l'hanno
+- Ricerca per numero volo, compagnia, destinazione
+
+[👤 PASSEGGERI]
+- CRUD completo passeggeri
+- Visualizza prenotazioni associate a ogni passeggero
+- Ricerca per nome, cognome, numero passaporto
+
+[🚪 GATE]
+- Vista Mappa: card colorate per stato (verde=libero, giallo=occupato, rosso=manutenzione)
+- Vista Lista: tabella completa
+- Gestione stato, terminal, jetbridge, capacità
+- Mostra il volo attualmente assegnato al gate
+
+[🔒 SICUREZZA]
+- Registra eventi di sicurezza con tipo e severità
+- Banner di allerta per eventi critici non risolti
+- Filtra per severità e stato risoluzione
+- Pulsante "✅ Risolvi" per chiudere gli eventi
+
+[📺 FIDS KIOSK]
+- Tabella partenze e arrivi stile aeroporto reale
+- Icone e colori per ogni stato volo
+- Filtri rapidi (boarding, ritardati, cancellati)
+- "📺 Apri Kiosk Fullscreen" → apre una finestra separata full-screen
+  ideale per un secondo monitor o display dedicato
+- Si aggiorna ogni 8-10 secondi
+
+[🎫 BOARDING / BIGLIETTI]
+- Scanner biglietti: inserisci il Booking Ref e premi Invio
+- Validazione automatica (✅ OK / ❌ Non trovato / ⚠ Già imbarcato)
+- Lista imbarco in tempo reale per il volo selezionato
+- Statistiche: totale/imbarcati/percentuale
+- Sistema TTS integrato:
+  - Annunci predefiniti (Boarding, Ritardo, Chiusura Gate, ecc.)
+  - Testo personalizzato
+  - Voce automatica alla convalida biglietto ("Benvenuto a bordo, Nome!")
+- Richiede pyttsx3 installato
+
+[👷 PERSONALE]
+- CRUD completo del personale
+- Filtro per reparto
+- Ricerca per nome, badge, ruolo
+- Gestione turni e reparti
+
+[⏱ TIMBRO CARTELLINO]
+- Inserisci Badge N° o Nome e premi "TIMBRA"
+- Auto-detect: se non è in servizio → Clock IN; se è in servizio → Clock OUT
+- Visualizza chi è attualmente in servizio (oggi)
+- Storico completo con filtro data e personale
+- Calcolo automatico ore lavorate
+
+[📊 REPORT & LOG]
+- Statistiche generali aggiornate
+- Tabella voli completa
+- Log di sistema filtrable per livello e modulo
+- Report imbarco per volo specifico
+- Esportazione CSV: Voli, Personale, Timbrature
+
+===========================================================
+6. COMPILAZIONE CON py2exe — GUIDA PASSO-PASSO
+===========================================================
+
+PREREQUISITI:
+- Python 3.8–3.11 installato (non 3.12+)
+- py2exe installato: pip install py2exe
+- Tutte le dipendenze installate: pip install PyQt5 pyttsx3
+
+------------------------------------------------------------
+PASSO 1 — Verifica l'ambiente
+------------------------------------------------------------
+Apri il Prompt dei Comandi nella cartella del progetto ed esegui:
+  python -c "import sys; print(sys.version)"
+  → Deve mostrare Python 3.8.x – 3.11.x
+
+  python -c "import py2exe; print('OK')"
+  → Deve mostrare "OK"
+
+------------------------------------------------------------
+PASSO 2 — Pulisci eventuali build precedenti
+------------------------------------------------------------
+  rmdir /s /q build
+  rmdir /s /q dist
+
+------------------------------------------------------------
+PASSO 3 — Lancia la compilazione
+------------------------------------------------------------
+  python setup.py py2exe
+
+Questo processo:
+- Analizza tutte le importazioni del progetto
+- Raccoglie i file .pyc compilati
+- Crea la cartella dist\ con l'eseguibile
+
+Tempo stimato: 1–5 minuti.
+
+------------------------------------------------------------
+PASSO 4 — Controlla la cartella dist\
+------------------------------------------------------------
+Dopo la compilazione troverai:
+  dist\
+  ├── AirportMS.exe          ← L'eseguibile principale
+  ├── library.zip            ← Librerie Python compresse
+  ├── platforms\             ← Plugin Qt necessari (windowed)
+  │   └── qwindows.dll
+  ├── styles\                ← Plugin stili Qt (opzionale)
+  └── *.dll                  ← DLL di sistema
+
+------------------------------------------------------------
+PASSO 5 — Copia la cartella db\
+------------------------------------------------------------
+py2exe non copia le cartelle dati automaticamente.
+Devi copiare manualmente:
+  xcopy /E /I db dist\db
+
+Oppure, crea manualmente la cartella:
+  mkdir dist\db
+
+Il database viene generato al primo avvio se non esiste.
+
+------------------------------------------------------------
+PASSO 6 — Test dell'eseguibile
+------------------------------------------------------------
+  cd dist
+  AirportMS.exe
+
+Se non si apre nulla, prova la versione debug:
+  Nel setup.py, commenta la sezione "windows=[..." e
+  decommentela sezione "console=[..." poi ricompila.
+  Questo mostra una console con eventuali errori.
+
+------------------------------------------------------------
+PASSO 7 — Risoluzione problemi comuni
+------------------------------------------------------------
+
+PROBLEMA: "DLL not found" / finestra non si apre
+SOLUZIONE: Manca qwindows.dll nella cartella platforms\
+  Trova il file in:
+    C:\Python3x\Lib\site-packages\PyQt5\Qt5\plugins\platforms\qwindows.dll
+  Copialo in:
+    dist\platforms\qwindows.dll
+
+PROBLEMA: "No module named 'pyttsx3.drivers.sapi5'"
+SOLUZIONE: Aggiungi in setup.py nella sezione "includes":
+    "pyttsx3.drivers.sapi5",
+    "win32com.client",
+    "win32api",
+
+PROBLEMA: ModuleNotFoundError generico
+SOLUZIONE: Aggiungi il modulo mancante nella lista "includes"
+  del setup.py e ricompila.
+
+PROBLEMA: L'app si avvia ma non vede il database
+SOLUZIONE: Assicurati che la cartella dist\db\ esista.
+
+PROBLEMA: py2exe dice "Python 3.12 not supported"
+SOLUZIONE: Installa Python 3.11 e usa quello per compilare.
+  python3.11 setup.py py2exe
+
+===========================================================
+7. DISTRIBUZIONE DEL PROGRAMMA
+===========================================================
+
+Per distribuire il programma su altri PC:
+
+OPZIONE A — Copia diretta (più semplice):
+  Copia l'intera cartella dist\ su un USB o condividi in rete.
+  Sull'altro PC basta eseguire AirportMS.exe.
+  NON serve installare Python!
+
+OPZIONE B — Crea un installer con NSIS o Inno Setup:
+  Scarica Inno Setup: https://jrsoftware.org/isinfo.php
+  Crea uno script .iss che includa tutta la cartella dist\.
+  Questo crea un file setup_AirportMS.exe professionale.
+
+OPZIONE C — PyInstaller (alternativa a py2exe, più moderna):
+  pip install pyinstaller
+  pyinstaller --onefile --windowed --name AirportMS main.py
+  L'output sarà in dist\AirportMS.exe (file singolo).
+  Più lento al primo avvio ma più portabile.
+
+===========================================================
+8. RISOLUZIONE PROBLEMI IN ESECUZIONE
+===========================================================
+
+Il log di sistema è visibile in:
+  Menu Reports & Log → scheda "🗃 Log di Sistema"
+
+Per il debug da console:
+  python main.py 2>&1 | tee debug.log
+
+Errori comuni:
+- "sqlite3.OperationalError" → cartella db\ non trovata. Creala manualmente.
+- "No audio output device" → pyttsx3 richiede un dispositivo audio. 
+  Il TTS viene silenziosamente ignorato se non disponibile.
+- Pannello vuoto → verifica che il file del pannello sia presente in ui/panels/
+
+===========================================================
+9. NOTE SUL DATABASE
+===========================================================
+
+Il database è SQLite → un singolo file: db/airport.db
+Puoi aprirlo con DB Browser for SQLite (gratuito):
+  https://sqlitebrowser.org/
+
+Tabelle principali:
+  flights         → voli
+  gates           → gate aeroportuali
+  passengers      → passeggeri
+  bookings        → prenotazioni/biglietti
+  staff           → personale
+  timeclock       → timbrature
+  security_events → eventi sicurezza
+  boarding_log    → log imbarco
+  system_log      → log applicazione
+
+Backup del database:
+  copy db\airport.db db\airport_backup.db
+
+Ripristino dati demo:
+  Elimina db\airport.db e riavvia il programma.
+  Il database verrà ricreato con i dati demo.
+
+===========================================================
+SCORCIATOIE DA TASTIERA
+===========================================================
+
+ESC    → Alterna tra full-screen e finestra normale
+Invio  → Conferma nel pannello Boarding / Timeclock
+
+===========================================================
+CONTATTI E SUPPORTO
+===========================================================
+
+Sistema sviluppato con:
+- Python 3.x
+- PyQt5 (GUI framework)
+- SQLite (database embedded)
+- pyttsx3 (Text-to-Speech)
+- py2exe (Windows executable packaging)
+
+===========================================================
